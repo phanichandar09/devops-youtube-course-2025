@@ -1,4 +1,5 @@
-# Two services: backend API on 5000, frontend (nginx) on 80
+version: '3.8'
+
 services:
   backend:
     build: ./server
@@ -8,6 +9,10 @@ services:
       - ./server/.env        
     ports:
       - "5000:5000"
+    depends_on:
+      - mongo
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/dev_db
 
   frontend:
     build: ./client  
@@ -17,3 +22,20 @@ services:
       - "5173:5173"
     depends_on:
       - backend
+
+  mongo:
+    image: mongo:6.0
+    container_name: mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mongo-data:
